@@ -1,0 +1,7 @@
+export(SurvGPR)
+export(SurvGPR_Predict)
+importFrom("stats", "pnorm", "sd")
+importFrom("tmvtnorm", "rtmvnorm")
+importFrom("MASS", "ginv")
+importFrom("optimx", "optimx")
+importFrom("mcmcse", "mcse")
