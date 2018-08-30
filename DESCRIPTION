@@ -1,4 +1,4 @@
-Package: SurvivalGPR
+Package: SurvGPR
 Type: Package
 Title: Survival time prediction using Gaussian process regression
 Version: 0.1
