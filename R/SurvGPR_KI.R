@@ -236,50 +236,5 @@ SurvGPR_KI = function(time, status, Z, K, tol, max.iter,
 	beta.new <- beta.temp
 	result <- list("beta" = beta.temp, "sigma2" = alpha2.temp, "Tout"  = Yup[match(1:length(time), c(train.obs, train.cen))])
 	return(result)
-
-	# # ------------------------------------------------------
-	# # compute final imputed survival times 
-	# # ------------------------------------------------------
-	# K11 <- Omega.new[c(train.obs, train.cen),c(train.obs, train.cen), drop=FALSE]
- #  	K12 <- Omega.new[c(train.obs, train.cen), test.inds, drop=FALSE]
- #  	Omega.temp <- alpha2.temp[1]*K[,,1]
- #  	K22 <- Omega.temp[test.inds, test.inds, drop=FALSE]
- #  	Kbeta = t(solve(K11, K12))
-  
- #  	if(upper.bound!="none"){
-    
- #    	if(length(rm.colind) > 0){
- #          EtY = Z[test.inds,-rm.colind]%*%beta.new + Kbeta%*%(Yup - Z[c(train.obs, train.cen), -rm.colind]%*%beta.new)
- #    	} else {
- #      		EtY = Z[test.inds,]%*%beta.new + Kbeta%*%(Yup - Z[c(train.obs, train.cen), ]%*%beta.new)
- #   		 }  
-    
- #    	VtY = Omega.new[test.inds, test.inds] - t(solve(Omega.new[c(train.obs, train.cen), c(train.obs, train.cen)], Omega.new[c(train.obs, train.cen), test.inds]))%*%Omega.new[c(train.obs, train.cen), test.inds]
- #    	Yl = rtmvnorm(10000, mean = c(EtY), sigma = VtY,
- #                  lower=rep(-Inf, length(test.inds)), upper=upper.bound.test, algorithm = "gibbs")
- #    	Ypred <- colSums(Yl)/10000
-    
- # #  	} else {
-    
-	# #     if(length(rm.colind) > 0){
-	# #     	Ypred = Z[test.inds,-rm.colind]%*%beta.new + Kbeta%*%(Yup - Z[c(train.obs, train.cen), -rm.colind]%*%beta.new)
-	# #     } else {
-	# #     	Ypred = Z[test.inds,]%*%beta.new + Kbeta%*%(Yup - Z[c(train.obs, train.cen), ]%*%beta.new)
-	# #     }  
-    
- # #  	}
-
-	# # EM.Cind <- summary(coxph(Surv(time[test.inds], status[test.inds])~ Ypred))$concordance[1]
-	# # out <- coxph(Surv(time[test.inds], status[test.inds]) ~ Ypred)
-	# # Ypred.cox <- predict(out)
-	# # Surv.rsp <- Surv(time[-test.inds], status[-test.inds])
-	# # Surv.rsp.test <-  Surv(time[test.inds], status[test.inds])
-	# # EM.Cuno <- AUC.uno(Surv.rsp, Surv.rsp.test, Ypred.cox, times)$iauc
-	# # EM.Cuno_val <- AUC.uno(Surv.rsp.test, Surv.rsp.test, Ypred.cox, times)$iauc
-	# # EM.time <- c(proc.time() - ptm)[3]
-
-	# return(list("EM.time" = EM.time, "EM.Cind" = EM.Cind, "EM.Cuno" = EM.Cuno, "EM.Cuno_val" = EM.Cuno_val, "Ypred" = Ypred, "Yimp" = Yup, "Yimp.inds" = c(train.obs, train.cen), 
-	# 	"beta" = beta.new, "alpha" = alpha2.temp, "EtY" = EtY, "VtY" = VtY))
-
 	
 }
