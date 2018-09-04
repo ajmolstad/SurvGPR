@@ -1,5 +1,5 @@
 # SurvGPR
-An R package implementing the method proposed in [[https://arxiv.org/abs/1808.10541]("Gaussian process regression for survival time prediction with genome-wide gene expression"]
+An R package implementing the method proposed in [[https://arxiv.org/abs/1808.10541](Gaussian process regression for survival time prediction with genome-wide gene expression]
 
 
 # Installation
