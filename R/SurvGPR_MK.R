@@ -117,9 +117,7 @@ SurvGPR_MK = function(time, status, Z, K, tol,
     alpha2.temp <- alpha2.iter
     O.temp <- O.iter
     inner.count <- 1
-    gammakm1 <- 0
-    gammak <- 1
-
+ 
     while(update){
       
       update.MM <- TRUE
@@ -182,9 +180,6 @@ SurvGPR_MK = function(time, status, Z, K, tol,
             loglik.temp <- loglik.extrapolation
 
           }
-
-          gammakm1 <- gammak 
-          gammak <- 0.5*(1 + sqrt(1 + 4*gammak^2))
 
         }
 
