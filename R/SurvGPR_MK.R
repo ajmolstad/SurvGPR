@@ -88,7 +88,7 @@ SurvGPR_MK = function(time, status, Z, K, tol,
   loglik <- rep(0, max.iter)
   Kbeta <- t(solve(Omega.iter[train.obs, train.obs], Omega.iter[train.obs, train.cen]))
   VtY <- Omega.iter[train.cen, train.cen] - t(solve(Omega.iter[train.obs, train.obs], Omega.iter[train.obs, train.cen]))%*%Omega.iter[train.obs, train.cen]
-  O.iter = solve(Omega.iter[c(train.obs,train.cen), c(train.obs,train.cen)])
+  O.iter <- solve(Omega.iter[c(train.obs,train.cen), c(train.obs,train.cen)])
   converged <- FALSE
   broken <- FALSE
   nsamples <- 500
@@ -102,12 +102,12 @@ SurvGPR_MK = function(time, status, Z, K, tol,
     # ---------------------------------------------------
     # E step 
     # ---------------------------------------------------
-    EtY = Z1%*%beta.iter + Kbeta%*%(Y0 - Z0%*%beta.iter)
-    Yl = rtmvnorm(nsamples, mean = c(EtY), sigma = VtY,
+    EtY <- Z1%*%beta.iter + Kbeta%*%(Y0 - Z0%*%beta.iter)
+    Yl <- rtmvnorm(nsamples, mean = c(EtY), sigma = VtY,
                   lower=Y1, upper=rep(Inf, length(Y1)), start.value = Yl[dim(Yl)[1],], 
                   algorithm = "gibbs", burn.in.samples = 1000, thinning = 10)
-    barY = matrix(colSums(Yl)/dim(Yl)[1], ncol=1)
-    Yup = matrix(c(Y0, barY), ncol=1)
+    barY <- matrix(colSums(Yl)/dim(Yl)[1], ncol=1)
+    Yup <- matrix(c(Y0, barY), ncol=1)
     
     # ---------------------------------------------------
     # M-step
