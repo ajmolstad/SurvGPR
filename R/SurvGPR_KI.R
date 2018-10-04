@@ -245,10 +245,8 @@ SurvGPR_KI = function(time, status, Z, K, tol, max.iter,
 	cond.mean <-  Z1%*%beta.temp + Kbeta%*%(Y0 - Z0%*%beta.temp)
 	cond.Var <- Omega.temp[train.cen, train.cen] - t(solve(Omega.temp[train.obs, train.obs], Omega.temp[train.obs, train.cen]))%*%Omega.temp[train.obs, train.cen]
 	d <- pmvnorm(lower=Y1, upper=rep(Inf, length(Y1)), mean=c(cond.mean),
-	    sigma=cond.Var)$error
-	cat(d, "\n")
+	    sigma=cond.Var)[1]
 	loglik <- log(d) -.5*determinant(Omega.temp[train.obs, train.obs], logarithm=TRUE)$modulus[1] - .5*t(Y0 - Z0%*%beta.temp)%*%solve(Omega.temp[train.obs,train.obs], Y0 - Z0%*%beta.temp) - .5*length(Y0)*log(2*pi)
-	cat(loglik, "\n")
 	AIC <- 2*(dim(Z)[2] + dim(K)[3]) - 2*loglik
 
 	result <- list("beta" = beta.temp, "sigma2" = alpha2.temp, "Tout"  = Yup[match(1:length(time), c(train.obs, train.cen))], "AIC" = AIC)
