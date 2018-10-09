@@ -30,17 +30,23 @@
 SurvGPR = function(time, status, Z, K, tol = 1e-7, 
                     max.iter = 100, max.iter.MM = 100, 
                     quiet = FALSE, max.samples = 1e5,
-                    kern.type = c("K+I", "multi-K")){
+                    kern.type = c("K+I", "multi-K"), initializer = 0){
 
   if(kern.type == "multi-K"){
+      
       K.input <- array(0, dim=c(dim(K)[1], dim(K)[2], dim(K)[3]+1))
       for(j in 1:dim(K)[3]){
         K.input[,,j] <- K[,,j]
       }
       K.input[,,dim(K)[3]+1] <- diag(1, dim(K[,,1])[1])
+      
+      if(initializer != 0 | initializer != 1 | initializer != 2){
+        stop("Initializer needs to one of {0,1,2}")
+      }
+      
       results <- SurvGPR_MK(time = time, status = status, Z = Z, K = K.input, 
                             tol = tol, max.iter = max.iter, max.iter.MM = max.iter.MM, 
-                            quiet=quiet, max.samples = max.samples)
+                            quiet=quiet, max.samples = max.samples, initializer = initializer)
   }
 
   if(kern.type=="K+I"){
@@ -49,7 +55,7 @@ SurvGPR = function(time, status, Z, K, tol = 1e-7,
       K.input[,,2] <- diag(1, dim(K[,,1])[2])
       results <- SurvGPR_KI(time = time, status = status, Z = Z, K = K.input, tol = tol, 
                             max.iter = max.iter, max.iter.MM = max.iter.MM, 
-                            quiet=quiet, max.samples = max.samples)
+                            quiet=quiet, max.samples = max.samples, initializer = initializer)
   }
   
   return(results)
