@@ -111,6 +111,7 @@ SurvGPR_MK = function(time, status, Z, K, tol,
   if(initializer == 0){
     
     out <- MM_Alg(Z.train, log(Y.train), K[c(train.obs, train.cen),c(train.obs, train.cen), ], max.iter = 1e3)
+    Omega.temp <- matrix(0, nrow = dim(K)[1], ncol = dim(K)[1])
     beta.iter <- out$beta
     alpha2.temp <- out$sigma2
     K.chols <- array(0, dim=c(length(train.inds), length(train.inds), M))
