@@ -39,8 +39,9 @@ SurvGPR = function(time, status, Z, K, tol = 1e-7,
         K.input[,,j] <- K[,,j]
       }
       K.input[,,dim(K)[3]+1] <- diag(1, dim(K[,,1])[1])
+      K <- K.input
       
-      if(initializer != 0 | initializer != 1 | initializer != 2){
+      if(initializer != 0 & initializer != 1 & initializer != 2){
         stop("Initializer needs to one of {0,1,2}")
       }
       

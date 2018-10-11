@@ -4,7 +4,6 @@ SurvGPR_MK = function(time, status, Z, K, tol,
                       quiet, max.samples, 
                       initializer){
   
-  
   # ----------------------------------------
   # divide training and testing sets
   # ----------------------------------------
@@ -74,8 +73,9 @@ SurvGPR_MK = function(time, status, Z, K, tol,
   Y.train <- Y.tot[c(train.obs, train.cen)]
 
   # -- variances all equal to one, coefs nonzero
-  if(initializer == 0){
-    alpha2.temp <- rep(1, M)
+  if(initializer == 2){
+    
+    alpha2.temp <- rep(var(log(Y.train))/M, M)
     Omega.temp <- matrix(0, nrow = dim(K)[1], ncol = dim(K)[1])
     K.chols <- array(0, dim=c(length(train.inds), length(train.inds), M))
     for(k in 1:M){
@@ -91,24 +91,28 @@ SurvGPR_MK = function(time, status, Z, K, tol,
 
   # -- error variance equal to unconditional variance, coefs nonzero 
   if(initializer == 1){
-    alpha2.temp <- rep(1, M)
+    
+    alpha2.temp <- rep(var(log(Y.train))/M, M)
     Omega.temp <- matrix(0, nrow = dim(K)[1], ncol = dim(K)[1])
     K.chols <- array(0, dim=c(length(train.inds), length(train.inds), M))
     for(k in 1:M){
       Omega.temp <- Omega.temp + alpha2.temp[k]*K[,,k]
       K.chols[,,k] <- chol(K[c(train.obs, train.cen), c(train.obs, train.cen), k])
     }
+    
     O.temp <- chol2inv(chol(Omega.temp[c(train.obs,train.cen), c(train.obs,train.cen)]))
     alpha2.iter <- alpha2.temp
     Omega.iter <- Omega.temp
     beta.iter <- rep(0, dim(Z.train)[2])
-    beta.iter[1] <- mean(Y.train)
+    beta.iter[1] <- mean(log(Y.train))
+    
   } 
-
-  # -- error variance equal to unconditional variance, coefs nonzero 
-  if(initializer == 2){
-    alpha2.temp <- rep(var(Y.train)/M, M)
-    Omega.temp <- matrix(0, nrow = dim(K)[1], ncol = dim(K)[1])
+  
+  if(initializer == 0){
+    
+    out <- MM_Alg(Z.train, log(Y.train), K[c(train.obs, train.cen),c(train.obs, train.cen), ], max.iter = 1e3)
+    beta.iter <- out$beta
+    alpha2.temp <- out$sigma2
     K.chols <- array(0, dim=c(length(train.inds), length(train.inds), M))
     for(k in 1:M){
       Omega.temp <- Omega.temp + alpha2.temp[k]*K[,,k]
@@ -117,24 +121,8 @@ SurvGPR_MK = function(time, status, Z, K, tol,
     O.temp <- chol2inv(chol(Omega.temp[c(train.obs,train.cen), c(train.obs,train.cen)]))
     alpha2.iter <- alpha2.temp
     Omega.iter <- Omega.temp
-    beta.iter <- ginv(tcrossprod(inner, t(Z.train)))%*%tcrossprod(inner, t(log(Y.train)))
-  } 
-
-    # -- error variance equal to unconditional variance, coefs nonzero 
-  if(initializer == 3){
-    alpha2.temp <- rep(var(Y.train)/M, M)
-    Omega.temp <- matrix(0, nrow = dim(K)[1], ncol = dim(K)[1])
-    K.chols <- array(0, dim=c(length(train.inds), length(train.inds), M))
-    for(k in 1:M){
-      Omega.temp <- Omega.temp + alpha2.temp[k]*K[,,k]
-      K.chols[,,k] <- chol(K[c(train.obs, train.cen), c(train.obs, train.cen), k])
-    }
-    O.temp <- chol2inv(chol(Omega.temp[c(train.obs,train.cen), c(train.obs,train.cen)]))
-    alpha2.iter <- alpha2.temp
-    Omega.iter <- Omega.temp
-    beta.iter <- rep(0, dim(Z.train)[2])
-    beta.iter[1] <- mean(Y.train)
-  } 
+    
+  }
 
 
   loglik <- rep(0, max.iter)
@@ -145,23 +133,7 @@ SurvGPR_MK = function(time, status, Z, K, tol,
   broken <- FALSE
   nsamples <- 500
 
-  # ---------------------------------------------------
-  # Compute initial log-likelihood
-  # ---------------------------------------------------
-  Yloglik = rtmvnorm(1e4, mean = Z.train[train.cen,]%*%beta.iter, sigma = O.iter[train.cen, train.cen], start.value = Yl[dim(Yl)[1],],
-            lower=Y1, upper=rep(Inf, length(Y1)), algorithm = "gibbs", burn.in.samples = 1000, thinning = 10)
-  cond.meanvec <- matrix(Z.train[train.obs, ]%*%beta.iter, byrow=FALSE, nrow=length(train.obs), ncol=dim(Yloglik)[1]) + O.iter[train.obs, train.cen]%*%solve(O.iter[train.cen, train.cen])%*%(t(Yloglik) -  matrix(Z.train[train.obs, ]%*%beta.iter, byrow=FALSE, nrow=length(train.obs), ncol=dim(Yloglik)[1]))
-  cond.omega <- solve(O.iter[train.obs, train.obs] - O.iter[train.obs, train.cen]%*%solve(O.iter[train.cen, train.cen], O.iter[train.cen, train.obs]))
-  logliknew <- 0
 
-  for(hh in 1:dim(cond.meanvec)[1]){
-    logliknew <- logliknew + crossprod(crossprod(Y0 - cond.meanvec[hh,], cond.omega), Y0 - cond.meanvec[hh,])
-  }
-
-  logliknew <- -logliknew/dim(cond.meanvec)[1] + determinant(cond.omega, logarithm=TRUE)$modulus[1]
-  loglikold <- loglikorig
-
-  cat("Initial loglik = ", loglikorig, "\n")
   # ---------------------------------------------------
   # iterations 
   # ---------------------------------------------------
@@ -226,31 +198,34 @@ SurvGPR_MK = function(time, status, Z, K, tol,
         out.temp  <- rowSums(tcrossprod(inner, chol(O.temp))^2)
         loglik.temp <- - sum(out.temp) - nsamples*Omega.det
 
-        # --- extrapolation attempt ---
-        if(iter.MM > 1){
+        #if(M > 2){
+         # --- extrapolation attempt ---
+          if(iter.MM > 1){
 
-          alpha2.extrapolation <- alpha2.temp + (1/sqrt(iter.MM-1))*(alpha2.temp - alpha2.temp.old)
-          Omega.extrapolation <- matrix(0, nrow=dim(Omega.iter)[1], ncol=dim(Omega.iter)[1])
-          for(k in 1:M){
-            Omega.extrapolation <- Omega.extrapolation + alpha2.extrapolation[k]*K[,,k]
-          }
-          O.extrapolation <- chol2inv(chol(Omega.extrapolation[c(train.obs,train.cen), c(train.obs,train.cen)]))
-          Omega.det.extrapolation <- determinant(Omega.extrapolation[c(train.obs,train.cen), c(train.obs,train.cen)], logarithm=TRUE)$modulus[1]
-          out.extrapolation  <- rowSums(tcrossprod(inner, chol(O.extrapolation))^2)
-          loglik.extrapolation <- - sum(out.extrapolation) - nsamples*Omega.det.extrapolation
-          
-          # ----- cat("Extrapolation step: extrap loglik = ",loglik.extrapolation, "prev loglik = ", loglik.temp, "\n")
-          if(loglik.extrapolation > loglik.temp){
+            alpha2.extrapolation <- alpha2.temp + (1/sqrt(iter.MM-1))*(alpha2.temp - alpha2.temp.old)
+            Omega.extrapolation <- matrix(0, nrow=dim(Omega.iter)[1], ncol=dim(Omega.iter)[1])
+            for(k in 1:M){
+              Omega.extrapolation <- Omega.extrapolation + alpha2.extrapolation[k]*K[,,k]
+            }
+            O.extrapolation <- chol2inv(chol(Omega.extrapolation[c(train.obs,train.cen), c(train.obs,train.cen)]))
+            Omega.det.extrapolation <- determinant(Omega.extrapolation[c(train.obs,train.cen), c(train.obs,train.cen)], logarithm=TRUE)$modulus[1]
+            out.extrapolation  <- rowSums(tcrossprod(inner, chol(O.extrapolation))^2)
+            loglik.extrapolation <- - sum(out.extrapolation) - nsamples*Omega.det.extrapolation
             
-            alpha2.temp <- alpha2.extrapolation
-            Omega.temp <- Omega.extrapolation
-            O.temp <- O.extrapolation
-            Omega.det <- Omega.det.extrapolation
-            loglik.temp <- loglik.extrapolation
+            # ----- cat("Extrapolation step: extrap loglik = ",loglik.extrapolation, "prev loglik = ", loglik.temp, "\n")
+            if(loglik.extrapolation > loglik.temp){
+              
+              alpha2.temp <- alpha2.extrapolation
+              Omega.temp <- Omega.extrapolation
+              O.temp <- O.extrapolation
+              Omega.det <- Omega.det.extrapolation
+              loglik.temp <- loglik.extrapolation
+
+            }
 
           }
-
-        }
+         #  }
+        # cat(loglik.temp, "\n")
 
         if(iter.MM == 1){
           loglik.orig <- loglik.temp
@@ -272,21 +247,21 @@ SurvGPR_MK = function(time, status, Z, K, tol,
         }
       }
 
-      # --------------------------------
-      # 
-      # --------------------------------
-      Yloglik = rtmvnorm(1e4, mean = Z.train[train.cen,]%*%beta.temp, sigma = O.temp[train.cen, train.cen], start.value = Yl[dim(Yl)[1],],
-            lower=Y1, upper=rep(Inf, length(Y1)), algorithm = "gibbs", burn.in.samples = 1000, thinning = 10)
-      cond.meanvec <- matrix(Z.train[train.obs, ]%*%beta.temp, byrow=FALSE, nrow=length(train.obs), ncol=dim(Yloglik)[1]) + O.temp[train.obs, train.cen]%*%solve(O.temp[train.cen, train.cen])%*%(t(Yloglik) -  matrix(Z.train[train.obs, ]%*%beta.temp, byrow=FALSE, nrow=length(train.obs), ncol=dim(Yloglik)[1]))
-      cond.omega <- solve(O.temp[train.obs, train.obs] - O.temp[train.obs, train.cen]%*%solve(O.temp[train.cen, train.cen], O.temp[train.cen, train.obs]))
-      logliknew <- 0
-      for(hh in 1:dim(cond.meanvec)[1]){
-        logliknew <- logliknew + crossprod(crossprod(Y0 - cond.meanvec[hh,], cond.omega), Y0 - cond.meanvec[hh,])
-      }
 
-      logliknew <- -logliknew/dim(cond.meanvec)[1] + determinant(cond.omega, logarithm=TRUE)$modulus[1]
+      loglik.new <- loglik.temp
+      loglik[qq] <- loglik.new
+      z.train.iter <- Z.train%*%beta.iter
+      inner <- out - tcrossprod(rep(1, nsamples), z.train.iter)
+      out.old <- rowSums(tcrossprod(inner, chol(O.iter))^2)
+      old.det <- determinant(Omega.iter[c(train.obs,train.cen), c(train.obs,train.cen)], logarithm=TRUE)$modulus[1]
+      loglik.old <- - sum(out.old) - nsamples*old.det
 
-      if(logliknew - loglikold > 0){
+      ASE <- mcse(- .5*out.temp - .5*Omega.det + .5*out.old + .5*old.det, method="tukey")$se
+      if(!quiet){
+        cat(qq,": ASE =", round(ASE,3), "; sigma2 =", round(alpha2.temp[1], 3), "; resid =", round(.5*loglik.new/nsamples - .5*loglik.old/nsamples - 1.96*ASE, 5),"; sk =", nsamples, "\n")
+      }        
+      
+      if(.5*loglik.new/nsamples - .5*loglik.old/nsamples - 1.96*ASE > 0){
         
         update <- FALSE
         beta.iter.old <- beta.iter
@@ -298,18 +273,6 @@ SurvGPR_MK = function(time, status, Z, K, tol,
         Kbeta <- t(solve(Omega.iter[train.obs, train.obs], Omega.iter[train.obs, train.cen]))
         VtY <- Omega.iter[train.cen, train.cen] - t(solve(Omega.iter[train.obs, train.obs], Omega.iter[train.obs, train.cen]))%*%Omega.iter[train.obs, train.cen]
         
-        if(abs(logliknew - loglikold)/abs(loglikorig) < tol){
-          broken <- TRUE
-          converged <- TRUE
-        } else {
-          loglikold <- logliknew 
-        }
-
-      if(!quiet){
-        cat(qq,": loglik =", round(logliknew,6), "; sigma2 =", round(alpha2.temp[1], 3), "; sk =", nsamples, "\n")
-      }    
-
-
       } else {
         
         Yadd = rtmvnorm(nsamples, mean = c(EtY), sigma = VtY, start.value = Yl[dim(Yl)[1],],
@@ -325,62 +288,12 @@ SurvGPR_MK = function(time, status, Z, K, tol,
           update <- FALSE
           broken <- TRUE
         } 
-        
         if(nsamples > max.samples){
           update <- FALSE
           broken <- TRUE
         } 
         
       }
-
-
-
-      # loglik.new <- loglik.temp
-      # loglik[qq] <- loglik.new
-      # z.train.iter <- Z.train%*%beta.iter
-      # inner <- out - tcrossprod(rep(1, nsamples), z.train.iter)
-      # out.old <- rowSums(tcrossprod(inner, chol(O.iter))^2)
-      # old.det <- determinant(Omega.iter[c(train.obs,train.cen), c(train.obs,train.cen)], logarithm=TRUE)$modulus[1]
-      # loglik.old <- - sum(out.old) - nsamples*old.det
-
-      # ASE <- mcse(- .5*out.temp - .5*Omega.det + .5*out.old + .5*old.det, method="tukey")$se
-      # if(!quiet){
-      #   cat(qq,": ASE =", round(ASE,3), "; sigma2 =", round(alpha2.temp[1], 3), "; resid =", round(.5*loglik.new/nsamples - .5*loglik.old/nsamples - 1.96*ASE, 5),"; sk =", nsamples, "\n")
-      # }        
-      
-      # if(.5*loglik.new/nsamples - .5*loglik.old/nsamples - 1.96*ASE > 0){
-        
-      #   update <- FALSE
-      #   beta.iter.old <- beta.iter
-      #   alpha2.iter.old <- alpha2.iter
-      #   beta.iter <- beta.temp
-      #   alpha2.iter <- alpha2.temp
-      #   Omega.iter <- Omega.temp
-      #   O.iter <- O.temp
-      #   Kbeta <- t(solve(Omega.iter[train.obs, train.obs], Omega.iter[train.obs, train.cen]))
-      #   VtY <- Omega.iter[train.cen, train.cen] - t(solve(Omega.iter[train.obs, train.obs], Omega.iter[train.obs, train.cen]))%*%Omega.iter[train.obs, train.cen]
-        
-      # } else {
-        
-      #   Yadd = rtmvnorm(nsamples, mean = c(EtY), sigma = VtY, start.value = Yl[dim(Yl)[1],],
-      #                   lower=Y1, upper=rep(Inf, length(Y1)), algorithm = "gibbs", burn.in.samples = 1000, thinning = 10)
-      #   nsamples <- 2*nsamples
-      #   Yl = rbind(Yl, Yadd)
-      #   barY = matrix(colSums(Yl)/dim(Yl)[1], ncol=1)      
-      #   Yup = matrix(c(Y0, barY), ncol=1)
-      #   cat("Adding samples for ascent:" , nsamples, " samples", "\n")
-      #   inner.count <-  inner.count + 1
-        
-      #   if(inner.count > max.iter){
-      #     update <- FALSE
-      #     broken <- TRUE
-      #   } 
-      #   if(nsamples > max.samples){
-      #     update <- FALSE
-      #     broken <- TRUE
-      #   } 
-        
-      # }
     }
     
     nsamples <- nsamples
@@ -397,9 +310,24 @@ SurvGPR_MK = function(time, status, Z, K, tol,
   
   Omega.new <- Omega.temp
   beta.new <- beta.temp
+  
+  # --------------------------------------
+  # Compute log-likelihood 
+  # ---------------------------------------
+  # Yloglik = rtmvnorm(5e4, mean = c(Z.train[train.cen,]%*%beta.temp), sigma = Omega.temp[train.cen, train.cen], start.value = Yl[dim(Yl)[1],],
+  #                   lower=Y1, upper=rep(Inf, length(Y1)), algorithm = "gibbs", burn.in.samples = 1000)
+  # cond.meanvec <- matrix(Z.train[train.obs, ]%*%beta.temp, byrow=FALSE, nrow=length(train.obs), ncol=dim(Yloglik)[1]) + Omega.temp[train.obs, train.cen]%*%solve(Omega.temp[train.cen, train.cen])%*%(t(Yloglik) -  matrix(Z.train[train.cen, ]%*%beta.temp, byrow=FALSE, nrow=dim(Yloglik)[2], ncol=dim(Yloglik)[1]))
+  # cond.omega <- solve(Omega.temp[train.obs, train.obs] - Omega.temp[train.obs, train.cen]%*%solve(Omega.temp[train.cen, train.cen], Omega.temp[train.cen, train.obs]))
+  
+  # loglikout <- 0
+  # for(hh in 1:dim(cond.meanvec)[2]){
+  #   loglikout <- loglikout + tcrossprod(crossprod(Y0 - cond.meanvec[,hh], cond.omega), Y0 - cond.meanvec[,hh])
+  # }
+  
+  # loglikout <- -loglikout/dim(cond.meanvec)[2] + determinant(cond.omega, logarithm=TRUE)$modulus[1]
 
-  # --- get log-density for marginal distribution of observed outcomes
-  result <- list("beta" = beta.temp, "sigma2" = alpha2.temp, "Tout" = Yup[match(1:length(time), c(train.obs, train.cen))], "converged" = converged)
+  result <- list("beta" = beta.temp, "sigma2" = alpha2.temp, "Tout" = Yup[match(1:length(time), c(train.obs, train.cen))]#, "converged" = converged, "loglik" = loglikout)
+      )
   return(result)
   
 }
