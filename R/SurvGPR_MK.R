@@ -75,7 +75,7 @@ SurvGPR_MK = function(time, status, Z, K, tol,
   # -- variances all equal to one, coefs nonzero
   if(initializer == 2){
     
-    alpha2.temp <- rep(var(log(Y.train))/M, M)
+    alpha2.temp <- rep(1, M)
     Omega.temp <- matrix(0, nrow = dim(K)[1], ncol = dim(K)[1])
     K.chols <- array(0, dim=c(length(train.inds), length(train.inds), M))
     for(k in 1:M){
