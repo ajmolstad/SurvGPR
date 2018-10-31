@@ -159,6 +159,7 @@ SurvGPR_MK = function(time, status, Z, K, tol,
     alpha2.temp <- alpha2.iter
     O.temp <- O.iter
     inner.count <- 1
+    nsamples.inner.count <- 1
  
     while(update){
       
@@ -259,10 +260,10 @@ SurvGPR_MK = function(time, status, Z, K, tol,
 
       ASE <- mcse(- .5*out.temp - .5*Omega.det + .5*out.old + .5*old.det, method="tukey")$se
       if(!quiet){
-        cat(qq,": ASE =", round(ASE,3), "; sigma2 =", round(alpha2.temp[1], 3), "; resid =", round(.5*loglik.new/nsamples - .5*loglik.old/nsamples - 1.96*ASE, 5),"; sk =", nsamples, "\n")
+        cat(qq,": ASE =", round(ASE,3), "; sigma2 =", round(alpha2.temp[1], 3), "; resid =", round(.5*loglik.new/nsamples - .5*loglik.old/nsamples - 2.58*ASE, 5),"; sk =", nsamples, "\n")
       }        
       
-      if(.5*loglik.new/nsamples - .5*loglik.old/nsamples - 1.96*ASE > 0){
+      if(.5*loglik.new/nsamples - .5*loglik.old/nsamples - 2.58*ASE > 0 | nsamples.inner.count >= 10){
         
         update <- FALSE
         beta.iter.old <- beta.iter
@@ -273,6 +274,7 @@ SurvGPR_MK = function(time, status, Z, K, tol,
         O.iter <- O.temp
         Kbeta <- t(solve(Omega.iter[train.obs, train.obs], Omega.iter[train.obs, train.cen]))
         VtY <- Omega.iter[train.cen, train.cen] - t(solve(Omega.iter[train.obs, train.obs], Omega.iter[train.obs, train.cen]))%*%Omega.iter[train.obs, train.cen]
+        nsamples.inner.count <- 1
         
       } else {
         
@@ -284,6 +286,7 @@ SurvGPR_MK = function(time, status, Z, K, tol,
         Yup = matrix(c(Y0, barY), ncol=1)
         cat("Adding samples for ascent:" , nsamples, " samples", "\n")
         inner.count <-  inner.count + 1
+        nsamples.inner.count <- nsamples.inner.count + 1
         
         if(inner.count > max.iter){
           update <- FALSE
