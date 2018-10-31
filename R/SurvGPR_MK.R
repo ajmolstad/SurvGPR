@@ -133,7 +133,7 @@ SurvGPR_MK = function(time, status, Z, K, tol,
   converged <- FALSE
   broken <- FALSE
   nsamples <- 500
-
+  nsamples.inner.count <- 1
 
   # ---------------------------------------------------
   # iterations 
@@ -159,7 +159,6 @@ SurvGPR_MK = function(time, status, Z, K, tol,
     alpha2.temp <- alpha2.iter
     O.temp <- O.iter
     inner.count <- 1
-    nsamples.inner.count <- 1
  
     while(update){
       
@@ -263,7 +262,7 @@ SurvGPR_MK = function(time, status, Z, K, tol,
         cat(qq,": ASE =", round(ASE,3), "; sigma2 =", round(alpha2.temp[1], 3), "; resid =", round(.5*loglik.new/nsamples - .5*loglik.old/nsamples - 2.58*ASE, 5),"; sk =", nsamples, "\n")
       }        
       
-      if(.5*loglik.new/nsamples - .5*loglik.old/nsamples - 2.58*ASE > 0 | nsamples.inner.count >= 10){
+      if(.5*loglik.new/nsamples - .5*loglik.old/nsamples - 2.58*ASE > 1e-4 | nsamples.inner.count >= 10){
         
         update <- FALSE
         beta.iter.old <- beta.iter
