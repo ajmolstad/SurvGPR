@@ -33,7 +33,7 @@ SurvGPR = function(time, status, Z, K, tol = 1e-7,
                     kern.type = c("K+I", "multi-K"), initializer = 0){
 
   if(kern.type == "multi-K"){
-      
+      # - store
       K.input <- array(0, dim=c(dim(K)[1], dim(K)[2], dim(K)[3]+1))
       for(j in 1:dim(K)[3]){
         K.input[,,j] <- K[,,j]
