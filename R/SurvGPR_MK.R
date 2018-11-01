@@ -262,7 +262,7 @@ SurvGPR_MK = function(time, status, Z, K, tol,
         cat(qq,": ASE =", round(ASE,3), "; sigma2 =", round(alpha2.temp[1], 3), "; resid =", round(.5*loglik.new/nsamples - .5*loglik.old/nsamples - 2.58*ASE, 5),"; sk =", nsamples, "\n")
       }        
       
-      if(.5*loglik.new/nsamples - .5*loglik.old/nsamples - 2.58*ASE > 1e-4 | nsamples.inner.count >= 10){
+      if(.5*loglik.new/nsamples - .5*loglik.old/nsamples - 2.58*ASE > 1e-4 & nsamples.inner.count <= 10){
         
         update <- FALSE
         beta.iter.old <- beta.iter
@@ -273,8 +273,10 @@ SurvGPR_MK = function(time, status, Z, K, tol,
         O.iter <- O.temp
         Kbeta <- t(solve(Omega.iter[train.obs, train.obs], Omega.iter[train.obs, train.cen]))
         VtY <- Omega.iter[train.cen, train.cen] - t(solve(Omega.iter[train.obs, train.obs], Omega.iter[train.obs, train.cen]))%*%Omega.iter[train.obs, train.cen]
-        nsamples.inner.count <- 1
-        
+        nsamples.inner.count <- nsamples.inner.count + 1
+        inner.count <-  inner.count + 1
+
+
       } else {
         
         Yadd = rtmvnorm(nsamples, mean = c(EtY), sigma = VtY, start.value = Yl[dim(Yl)[1],],
@@ -284,13 +286,14 @@ SurvGPR_MK = function(time, status, Z, K, tol,
         barY = matrix(colSums(Yl)/dim(Yl)[1], ncol=1)      
         Yup = matrix(c(Y0, barY), ncol=1)
         cat("Adding samples for ascent:" , nsamples, " samples", "\n")
-        inner.count <-  inner.count + 1
-        nsamples.inner.count <- nsamples.inner.count + 1
+        nsamples.inner.count <- 1
+        
         
         if(inner.count > max.iter){
           update <- FALSE
           broken <- TRUE
         } 
+        
         if(nsamples > max.samples){
           update <- FALSE
           broken <- TRUE
