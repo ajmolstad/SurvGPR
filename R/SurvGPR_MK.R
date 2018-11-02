@@ -320,8 +320,8 @@ SurvGPR_MK = function(time, status, Z, K, tol,
   # --------------------------------------
   # Compute log-likelihood 
   # ---------------------------------------
-  Yloglik = rtmvnorm(5e4, mean = c(Z.train[train.cen,]%*%beta.temp), sigma = Omega.temp[train.cen, train.cen], start.value = Yl[dim(Yl)[1],],
-                    lower=Y1, upper=rep(Inf, length(Y1)), algorithm = "gibbs", burn.in.samples = 1000)
+  Yloglik = rtmvnorm(1e5, mean = c(Z.train[train.cen,]%*%beta.temp), sigma = Omega.temp[train.cen, train.cen], start.value = Yl[dim(Yl)[1],],
+                    lower=Y1, upper=rep(Inf, length(Y1)), algorithm = "gibbs", burn.in.samples = 1000, thinning = 10)
   cond.meanvec <- matrix(Z.train[train.obs, ]%*%beta.temp, byrow=FALSE, nrow=length(train.obs), ncol=dim(Yloglik)[1]) + Omega.temp[train.obs, train.cen]%*%solve(Omega.temp[train.cen, train.cen])%*%(t(Yloglik) -  matrix(Z.train[train.cen, ]%*%beta.temp, byrow=FALSE, nrow=dim(Yloglik)[2], ncol=dim(Yloglik)[1]))
   cond.omega <- solve(Omega.temp[train.obs, train.obs] - Omega.temp[train.obs, train.cen]%*%solve(Omega.temp[train.cen, train.cen], Omega.temp[train.cen, train.obs]))
   
@@ -330,9 +330,9 @@ SurvGPR_MK = function(time, status, Z, K, tol,
     loglikout <- loglikout + tcrossprod(crossprod(Y0 - cond.meanvec[,hh], cond.omega), Y0 - cond.meanvec[,hh])
   }
   
-  loglikout <- -loglikout/dim(cond.meanvec)[2] + determinant(cond.omega, logarithm=TRUE)$modulus[1]
+  negloglikout <- loglikout/dim(cond.meanvec)[2] - determinant(cond.omega, logarithm=TRUE)$modulus[1]
 
-  result <- list("beta" = beta.temp, "sigma2" = alpha2.temp, "Tout" = Yup[match(1:length(time), c(train.obs, train.cen))], "loglik" = loglikout)
+  result <- list("beta" = beta.temp, "sigma2" = alpha2.temp, "Tout" = Yup[match(1:length(time), c(train.obs, train.cen))], "negloglik" = negloglikout)
   return(result)
   
 }
