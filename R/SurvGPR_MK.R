@@ -332,7 +332,7 @@ SurvGPR_MK = function(time, status, Z, K, tol,
   
   negloglikout <- loglikout/dim(cond.meanvec)[2] - determinant(cond.omega, logarithm=TRUE)$modulus[1]
 
-  result <- list("beta" = beta.temp, "sigma2" = alpha2.temp, "Tout" = Yup[match(1:length(time), c(train.obs, train.cen))], "negloglik" = negloglikout)
+  result <- list("beta" = beta.temp, "sigma2" = alpha2.temp, "Tout" = Yup[match(1:length(time), c(train.obs, train.cen))], "negloglik" = negloglikout, "Yimpute" = Y.tot)
   return(result)
   
 }
