@@ -22,6 +22,9 @@ SurvGPR(time, status, Z, K, tol = 1e-7, max.iter = 100, max.iter.MM = 100, quiet
    \item{beta}{\eqn{\hat{\beta}}: The estimated regression coefficient vector corresponding to the columns of \code{Z}. }
   \item{sigma2}{\eqn{\hat{\sigma}^2}: The estimated variance components -- a vector of length \eqn{M+1}, with the final element corresponding to the variance of \eqn{\epsilon}. }
   \item{Tout}{The log-failure and imputed log-failure times obtained from our MCEM algorithm. These are primarily to be used in the prediction function. }
+  \item{negloglik}{An approximation of the observed data negative log likelihood value at the final iterates. }
+  \item{Yimpute}{The mean-imputed values of the training time-to-failures based on the method of Datta et al (2005). }
+
 }
 
 \description{
