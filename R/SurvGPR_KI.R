@@ -1,6 +1,6 @@
 SurvGPR_KI = function(time, status, Z, K, tol, max.iter, 
 					max.iter.MM, 
-                    quiet, max.samples){
+                    quiet, max.samples, initializer){
 
 	# ----------------------------------------
 	# censored and uncensored observations 
