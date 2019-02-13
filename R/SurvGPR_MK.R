@@ -320,19 +320,20 @@ SurvGPR_MK = function(time, status, Z, K, tol,
   # --------------------------------------
   # Compute log-likelihood 
   # ---------------------------------------
-  Yloglik = rtmvnorm(1e5, mean = c(Z.train[train.cen,]%*%beta.temp), sigma = Omega.temp[train.cen, train.cen], start.value = Yl[dim(Yl)[1],],
-                    lower=Y1, upper=rep(Inf, length(Y1)), algorithm = "gibbs", burn.in.samples = 1000, thinning = 10)
-  cond.meanvec <- matrix(Z.train[train.obs, ]%*%beta.temp, byrow=FALSE, nrow=length(train.obs), ncol=dim(Yloglik)[1]) + Omega.temp[train.obs, train.cen]%*%solve(Omega.temp[train.cen, train.cen])%*%(t(Yloglik) -  matrix(Z.train[train.cen, ]%*%beta.temp, byrow=FALSE, nrow=dim(Yloglik)[2], ncol=dim(Yloglik)[1]))
-  cond.omega <- solve(Omega.temp[train.obs, train.obs] - Omega.temp[train.obs, train.cen]%*%solve(Omega.temp[train.cen, train.cen], Omega.temp[train.cen, train.obs]))
+  #Yloglik = rtmvnorm(1e5, mean = c(Z.train[train.cen,]%*%beta.temp), sigma = Omega.temp[train.cen, train.cen], start.value = Yl[dim(Yl)[1],],
+  #                 lower=Y1, upper=rep(Inf, length(Y1)), algorithm = "gibbs", burn.in.samples = 1000, thinning = 10)
+  #cond.meanvec <- matrix(Z.train[train.obs, ]%*%beta.temp, byrow=FALSE, nrow=length(train.obs), ncol=dim(Yloglik)[1]) + Omega.temp[train.obs, train.cen]%*%solve(Omega.temp[train.cen, train.cen])%*%(t(Yloglik) -  matrix(Z.train[train.cen, ]%*%beta.temp, byrow=FALSE, nrow=dim(Yloglik)[2], ncol=dim(Yloglik)[1]))
+  #cond.omega <- solve(Omega.temp[train.obs, train.obs] - Omega.temp[train.obs, train.cen]%*%solve(Omega.temp[train.cen, train.cen], Omega.temp[train.cen, train.obs]))
   
-  loglikout <- 0
-  for(hh in 1:dim(cond.meanvec)[2]){
-    loglikout <- loglikout + tcrossprod(crossprod(Y0 - cond.meanvec[,hh], cond.omega), Y0 - cond.meanvec[,hh])
-  }
+  #loglikout <- 0
+  #for(hh in 1:dim(cond.meanvec)[2]){
+  #  loglikout <- loglikout + tcrossprod(crossprod(Y0 - cond.meanvec[,hh], cond.omega), Y0 - cond.meanvec[,hh])
+  #}
   
-  negloglikout <- loglikout/dim(cond.meanvec)[2] - determinant(cond.omega, logarithm=TRUE)$modulus[1]
+  #negloglikout <- loglikout/dim(cond.meanvec)[2] - determinant(cond.omega, logarithm=TRUE)$modulus[1]
 
-  result <- list("beta" = beta.temp, "sigma2" = alpha2.temp, "Tout" = Yup[match(1:length(time), c(train.obs, train.cen))], "negloglik" = negloglikout, "Yimpute" = Y.tot)
+  result <- list("beta" = beta.temp, "sigma2" = alpha2.temp, "Tout" = Yup[match(1:length(time), c(train.obs, train.cen))], #"negloglik" = negloglikout, 
+                 "Yimpute" = Y.tot)
   return(result)
   
 }
