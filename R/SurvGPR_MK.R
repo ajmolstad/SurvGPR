@@ -88,6 +88,23 @@ SurvGPR_MK = function(time, status, Z, K, tol,
     inner <- crossprod(Z.train, solve(Omega.iter[c(train.obs, train.cen),c(train.obs, train.cen)]))
     beta.iter <- ginv(tcrossprod(inner, t(Z.train)))%*%tcrossprod(inner, t(log(Y.train)))
   } 
+  
+   if(initializer == 3){
+    
+    alpha2.temp <- runif(M, .5, 5)
+    Omega.temp <- matrix(0, nrow = dim(K)[1], ncol = dim(K)[1])
+    K.chols <- array(0, dim=c(length(train.inds), length(train.inds), M))
+    for(k in 1:M){
+      Omega.temp <- Omega.temp + alpha2.temp[k]*K[,,k]
+      K.chols[,,k] <- chol(K[c(train.obs, train.cen), c(train.obs, train.cen), k])
+    }
+    O.temp <- chol2inv(chol(Omega.temp[c(train.obs,train.cen), c(train.obs,train.cen)]))
+    alpha2.iter <- alpha2.temp
+    Omega.iter <- Omega.temp
+    inner <- crossprod(Z.train, solve(Omega.iter[c(train.obs, train.cen),c(train.obs, train.cen)]))
+    beta.iter <- ginv(tcrossprod(inner, t(Z.train)))%*%tcrossprod(inner, t(log(Y.train)))
+  } 
+  
 
   # -- error variance equal to unconditional variance, coefs nonzero 
   if(initializer == 1){
@@ -127,6 +144,8 @@ SurvGPR_MK = function(time, status, Z, K, tol,
 
 
   loglik <- rep(0, max.iter)
+  sigmas.iterates <- matrix(0, nrow=M, ncol=max.iter)
+  nsamples.iterates <- rep(0, ncol=max.iter)
   Kbeta <- t(solve(Omega.iter[train.obs, train.obs], Omega.iter[train.obs, train.cen]))
   VtY <- Omega.iter[train.cen, train.cen] - t(solve(Omega.iter[train.obs, train.obs], Omega.iter[train.obs, train.cen]))%*%Omega.iter[train.obs, train.cen]
   O.iter <- solve(Omega.iter[c(train.obs,train.cen), c(train.obs,train.cen)])
@@ -256,6 +275,8 @@ SurvGPR_MK = function(time, status, Z, K, tol,
       out.old <- rowSums(tcrossprod(inner, chol(O.iter))^2)
       old.det <- determinant(Omega.iter[c(train.obs,train.cen), c(train.obs,train.cen)], logarithm=TRUE)$modulus[1]
       loglik.old <- - sum(out.old) - nsamples*old.det
+      sigmas.iterates[,qq] <-alpha2.iter
+      nsamples.iterates[qq] <- nsamples
 
       ASE <- mcse(- .5*out.temp - .5*Omega.det + .5*out.old + .5*old.det, method="tukey")$se
       if(!quiet){
@@ -333,7 +354,7 @@ SurvGPR_MK = function(time, status, Z, K, tol,
   #negloglikout <- loglikout/dim(cond.meanvec)[2] - determinant(cond.omega, logarithm=TRUE)$modulus[1]
 
   result <- list("beta" = beta.temp, "sigma2" = alpha2.temp, "Tout" = Yup[match(1:length(time), c(train.obs, train.cen))], #"negloglik" = negloglikout, 
-                 "Yimpute" = Y.tot)
+                 "Yimpute" = Y.tot,  "sigmas.iterates" = sigmas.iterates[,1:(qq+1)], "nsamples.iterates" = nsamples.iterates[1:(qq+1)])
   return(result)
   
 }
