@@ -13,7 +13,7 @@ SurvGPR_MK = function(time, status, Z, K, tol,
   M <- dim(K)[3]
     
   # ------------------------------------------
-  # Datta imputation for initial values 
+  # IPW-imputation for initial values 
   # ------------------------------------------
   Y.train <- time
   time.train <- time
