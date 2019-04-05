@@ -72,42 +72,8 @@ SurvGPR_MK = function(time, status, Z, K, tol,
   Z.train <- rbind(Z0, Z1)
   Y.train <- Y.tot[c(train.obs, train.cen)]
 
-  # -- variances all equal to one, coefs nonzero
-  if(initializer == 2){
-    
-    alpha2.temp <- rep(1, M)
-    Omega.temp <- matrix(0, nrow = dim(K)[1], ncol = dim(K)[1])
-    K.chols <- array(0, dim=c(length(train.inds), length(train.inds), M))
-    for(k in 1:M){
-      Omega.temp <- Omega.temp + alpha2.temp[k]*K[,,k]
-      K.chols[,,k] <- chol(K[c(train.obs, train.cen), c(train.obs, train.cen), k])
-    }
-    O.temp <- chol2inv(chol(Omega.temp[c(train.obs,train.cen), c(train.obs,train.cen)]))
-    alpha2.iter <- alpha2.temp
-    Omega.iter <- Omega.temp
-    inner <- crossprod(Z.train, solve(Omega.iter[c(train.obs, train.cen),c(train.obs, train.cen)]))
-    beta.iter <- ginv(tcrossprod(inner, t(Z.train)))%*%tcrossprod(inner, t(log(Y.train)))
-  } 
-  
-   if(initializer == 3){
-    
-    alpha2.temp <- runif(M, .5, 5)
-    Omega.temp <- matrix(0, nrow = dim(K)[1], ncol = dim(K)[1])
-    K.chols <- array(0, dim=c(length(train.inds), length(train.inds), M))
-    for(k in 1:M){
-      Omega.temp <- Omega.temp + alpha2.temp[k]*K[,,k]
-      K.chols[,,k] <- chol(K[c(train.obs, train.cen), c(train.obs, train.cen), k])
-    }
-    O.temp <- chol2inv(chol(Omega.temp[c(train.obs,train.cen), c(train.obs,train.cen)]))
-    alpha2.iter <- alpha2.temp
-    Omega.iter <- Omega.temp
-    inner <- crossprod(Z.train, solve(Omega.iter[c(train.obs, train.cen),c(train.obs, train.cen)]))
-    beta.iter <- ginv(tcrossprod(inner, t(Z.train)))%*%tcrossprod(inner, t(log(Y.train)))
-  } 
-  
-
   # -- error variance equal to unconditional variance, coefs nonzero 
-  if(initializer == 1){
+  if(initializer == 0){
     
     alpha2.temp <- rep(var(log(Y.train))/M, M)
     Omega.temp <- matrix(0, nrow = dim(K)[1], ncol = dim(K)[1])
@@ -125,7 +91,7 @@ SurvGPR_MK = function(time, status, Z, K, tol,
     
   } 
   
-  if(initializer == 0){
+  if(initializer == 1){
     
     out <- MM_Alg(Z.train, log(Y.train), K[c(train.obs, train.cen),c(train.obs, train.cen), ], max.iter = 1e3)
     Omega.temp <- matrix(0, nrow = dim(K)[1], ncol = dim(K)[1])
