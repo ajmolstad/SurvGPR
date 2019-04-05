@@ -82,12 +82,11 @@ SurvGPR_MK = function(time, status, Z, K, tol,
       Omega.temp <- Omega.temp + alpha2.temp[k]*K[,,k]
       K.chols[,,k] <- chol(K[c(train.obs, train.cen), c(train.obs, train.cen), k])
     }
-    
     O.temp <- chol2inv(chol(Omega.temp[c(train.obs,train.cen), c(train.obs,train.cen)]))
     alpha2.iter <- alpha2.temp
     Omega.iter <- Omega.temp
-    beta.iter <- rep(0, dim(Z.train)[2])
-    beta.iter[1] <- mean(log(Y.train))
+    inner <- crossprod(Z.train, solve(Omega.iter[c(train.obs, train.cen),c(train.obs, train.cen)]))
+    beta.iter <- ginv(tcrossprod(inner, t(Z.train)))%*%tcrossprod(inner, t(log(Y.train)))
     
   } 
   
