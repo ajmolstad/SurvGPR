@@ -15,10 +15,8 @@ SurvGPR(time, status, Z, K, tol = 1e-7, max.iter = 100, max.iter.MM = 100, quiet
   \item{max.iter}{The maximum number of total EM-iterations. }
   \item{kern.type}{A character argument -- either \code{K+I} when \eqn{M=1} or \code{multi-K} when \eqn{M>1}. Incorrect compatability with input \eqn{K} will produce an error. }
   \item{quiet}{\code{TRUE/FALSE} -- print algorithm progress?}
-  \item{initializer}{Only used when \code{kern.type = "multi-K"}: an element of \eqn{0,1,2,3} indicating the type of initialization used for the Monte-Carlo EM. The default is 0, which fits a variance components model to the IPW-mean-imputed dataset. \
-                     The code 1 sets all variance componets equal and gets an initial estimate of \eqn{\hat{\beta}} using the updating equation from Algorithm 2. 
-                     The code 2 sets all variance components equal and sets all elements of \eqn{\hat{\beta}} to zero except the intercept, which is set to be equal to the mean of the log-survival time from the IPW-mean-imputed pseudocomplete dataset.
-                    The code 3 randomly initializes the starting values -- this is not recommended. }
+  \item{initializer}{Only used when \code{kern.type = "multi-K"}: either \eqn{0,1} indicating the type of initialization used for the Monte-Carlo EM. The default is 0,  sets all variance componets equal and gets an initial estimate of \eqn{\hat{\beta}} using the updating equation from Algorithm 2. 
+                     The code 1 which fits a variance components model to the IPW-mean-imputed dataset.}
   \item{max.samples}{An upper bound on \eqn{s_k}, the Monte-Carlo sample size for the \eqn{k}th iteration. Note that the final imputed values of log-survival for censored subjects will be the average of \code{max.samples} Monte-Carlo draws. }
 }
 \value{
