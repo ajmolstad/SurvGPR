@@ -5,7 +5,7 @@ Version: 0.1
 Date: 2018-05-09
 Author: Aaron J. Molstad <amolstad@fredhutch.org>
 Maintainer: Aaron J. Molstad <amolstad@fredhutch.org>
-Description: Perform survival time prediction using a Gaussian process regression model. 
+Description: Perform survival time prediction using a Gaussian process regression model. This package is actively maintained at github.com/ajmolstad/SurvGPR. 
 License: GPL-2
 LazyData: TRUE
 Imports: MASS, optimx, tmvtnorm, mcmcse
