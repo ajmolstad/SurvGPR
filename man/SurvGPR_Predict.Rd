@@ -2,8 +2,7 @@
 \alias{SurvGPR_Predict}
 \title{Predict log-survival time with Gaussian process regression using an object of class \code{SurvGRP}.}
 \usage{
-SurvGPR_Predict(results, barT, Z.full, K.full, train.inds, test.inds, times, 
-					kern.type=c("K+I", "multi-K"))
+SurvGPR_Predict(results, barT, Z.full, K.full, train.inds, test.inds, times=NULL)
 }
 \arguments{
 \item{results}{An object of class "SurvGPR" obtained from fitting a model using \code{SurvGPR.} }
@@ -13,7 +12,6 @@ SurvGPR_Predict(results, barT, Z.full, K.full, train.inds, test.inds, times,
 \item{train.inds}{The indices of \code{Z.full} and \code{K.full} which correspond to the training data. Note that \code{barT} must be ordered so that its elements correspond to the train.inds.}
 \item{test.inds}{The indices of \code{Z.full} and \code{K.full} which correspond to the test data, i.e., the data for which we want to make predictions.}
 \item{times}{A vector of times (on the original scale) at which we want to evaluate a survival function for the testing data. }
-\item{kern.type}{A character argument -- either \code{K+I} when \eqn{M=1} or \code{multi-K} when \eqn{M>1}. Incorrect compatability with input \eqn{K} will produce an error. }
 }
 \value{
 	\item{test.inds}{The indices of \code{Z.full} and K.full which correspond to the test data, i.e., the data for which we made predictions.}
