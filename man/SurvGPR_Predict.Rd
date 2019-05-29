@@ -19,5 +19,5 @@ SurvGPR_Predict(results, barT, Z.full, K.full, train.inds, test.inds, times=NULL
 	\item{survFunc}{An \eqn{n_{\rm test} \times {\rm length}(\texttt{times})} matrix containing the estimated survival curves. The \eqn{k}th row is the estimated survival curve for the \eqn{k}th subject in the testing data evaluated at the inputed times. }
 }
 \description{
-	A function for prediction based on an object of class "SurvGRP"; models fit by \code{SurvGPR}. 
+	A function for prediction based on an object of class "SurvGRP"; models fit by \code{SurvGPR}. See github.com/ajmolstad/SurvGPR for examples. 
 }

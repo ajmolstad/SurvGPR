@@ -1,0 +1,81 @@
+---
+title: "SurvGPR Vignette"
+author: "Aaron J. Molstad"
+date: "5/28/2019"
+output:
+  html_document: default
+  pdf_document: default
+---
+In this document, we show how to use the SurvGPR R package. First, we download the package from github.com/ajmolstad/SurvGRP. 
+```{r setup, include=TRUE, eval=FALSE}
+sessionInfo()
+library(devtools)
+devtools::install_github("ajmolstad/SurvGPR", force=TRUE)
+library(SurvGPR)
+library(MASS)
+```
+
+Then, we create survival data from the Gaussian process regression model. 
+```{r generate_data, include = TRUE, cache=TRUE}
+# set dimesions
+set.seed(20)
+n = 500
+p = 1000
+q = 2
+train.inds <- sample(1:n, 300)
+test.inds <- c(1:n)[-train.inds]
+
+# generate gene expression kernel
+SigmaX <- matrix(.5, nrow=p, ncol=p)
+diag(SigmaX) <- 1
+X <- mvrnorm(n = n, mu = rep(0, p), Sigma = SigmaX, tol = 1e-6)
+Kout <- as.matrix(dist(X, method="euclidean"))
+K1 <- exp(-Kout/max(Kout[train.inds,train.inds]))
+K1.full <- exp(-Kout/max(Kout))
+
+Z <- cbind(rep(1, n), matrix(rnorm(n*q), nrow=n))
+beta <- c(6.2, -0.5, -1.2)
+Sigma <- 3*K1.full
+G <- mvrnorm(n = 1, mu = rep(0, n), Sigma = Sigma, tol = 1e-6)
+	
+# generate failure times 
+log_time <- Z%*%beta + c(G) + rnorm(n, sd=sqrt(.5))		
+C <- log(rexp(n=n, rate=1/quantile(exp(log_time), .8)))
+y <- pmin(log_time, C)
+time <- exp(y)
+status <- 1*(y != C)
+```
+
+Next, we fit the SurvGPR model using the following. Please note that this may take a few minutes to run. 
+```{r fit_SurvGPR, include = TRUE, cache=TRUE}
+time.train <- time[train.inds]
+status.train <- status[train.inds]
+Z.train <- Z[train.inds,]
+K.train <- array(K1[train.inds,train.inds], dim=c(length(train.inds), length(train.inds), 1))
+results <- SurvGPR(time = time.train, status = status.train, Z = Z.train, K = K.train, tol = 1e-7, max.iter.MM = 100, max.iter = 100, quiet=FALSE, max.samples = 1e5, initializer = 0)
+```
+
+We can look at the estimated variance components: 
+```{r, cache=TRUE}
+results$sigma2
+```
+
+Finally, we can then predict for new subjects. Note that we can also get predicted survival probabilities at certain times (on the original scale, not log-scale) by specifying times int he \texttt{times} argument. 
+```{r, cache=TRUE}
+K.test <- array(K1.full, dim=c(n,n, 1))
+pred_results <- SurvGPR_Predict(results = results, barT = results$Tout , Z.full = Z, K.full = K.test, train.inds = train.inds, test.inds = test.inds, times = seq(0, max(time), length=50))
+str(pred_results)
+```
+The output contains the predicted survival times on the log-scale, the testing indices, and the survival probabilities for all test set patients at the values given for \texttt{times}. We plot the estimated probabilites for three different subjects below. 
+```{r survPlot, cache=TRUE}
+plot(x = seq(0, max(time), length=50), y = pred_results$survFunc[1,], ylab="Survival probability", xlab="Survival time", type="l", ylim=c(0,1))
+lines(x =seq(0, max(time), length=50), y = pred_results$survFunc[2,], lty=2)
+lines(x =seq(0, max(time), length=50), y = pred_results$survFunc[3,], lty=3)
+```
+
+
+We also plot our predictions versus the true log-survival times. 
+```{r survPlot2, cache=TRUE}
+plot(x = pred_results$log.pred, y = log_time[pred_results$test.inds], xlab="Predicted log-survival times", ylab="True log-survival times", pch=20)
+abline(0,1,  lty=2)
+```

@@ -26,5 +26,5 @@ SurvGPR(time, status, Z, K, tol = 1e-7, max.iter = 100, max.iter.MM = 100, quiet
 }
 
 \description{
-  A function for fitting a Gaussian process regression model to right-censored survival time data. 
+  A function for fitting a Gaussian process regression model to right-censored survival time data.  See github.com/ajmolstad/SurvGPR for examples. 
 }
