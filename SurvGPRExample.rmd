@@ -1,10 +1,10 @@
 ---
-title: "SurvGPR Vignette"
-author: "Aaron J. Molstad"
+title: "SurvGPR Example"
+author: "Aaron J. Molstad (amolstad@fredhutch.org)"
 date: "5/28/2019"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 In this document, we show how to use the SurvGPR R package. First, we download the package from github.com/ajmolstad/SurvGRP. 
 ```{r setup, include=TRUE, eval=FALSE}
