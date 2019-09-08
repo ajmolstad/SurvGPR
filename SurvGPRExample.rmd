@@ -6,7 +6,7 @@ output:
   html_document: default
   pdf_document: default
 ---
-In this document, we show how to use the SurvGPR R package. First, we download the package from github.com/ajmolstad/SurvGRP. 
+In this document, we show how to use the $\texttt{SurvGPR}$ R package. **If you encounter any errors or strange behavior, please report the issue at http://www.github.com/ajmolstad/SurvGPR.** First, we download the package from GitHub. 
 ```{r setup, include=TRUE, eval=FALSE}
 library(devtools)
 devtools::install_github("ajmolstad/SurvGPR")
