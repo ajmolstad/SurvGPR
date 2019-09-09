@@ -370,7 +370,7 @@ summary {
 </div>
 
 
-<p>In this document, we show how to use the <span class="math inline">\(\texttt{SurvGPR}\)</span> R package. <strong>If you encounter any errors or strange behavior, please report the issue at &lt;github.com/ajmolstad/SurvGPR&gt;.</strong> First, we download the package from GitHub.</p>
+<p>In this document, we show how to use the <span class="math inline">\(\texttt{SurvGPR}\)</span> R package. <strong>If you encounter any errors or strange behavior, please report the issue at <a href="https://github.com/ajmolstad/SurvGPR" class="uri">https://github.com/ajmolstad/SurvGPR</a>.</strong> First, we download the package from GitHub.</p>
 <pre class="r"><code>library(devtools)
 devtools::install_github(&quot;ajmolstad/SurvGPR&quot;)</code></pre>
 <p>Then, we create survival data from the Gaussian process regression model.</p>
@@ -389,11 +389,19 @@ devtools::install_github(&quot;ajmolstad/SurvGPR&quot;)</code></pre>
 ## attached base packages:
 ## [1] stats     graphics  grDevices utils     datasets  methods   base     
 ## 
+## other attached packages:
+## [1] MASS_7.3-51.4 SurvGPR_0.1  
+## 
 ## loaded via a namespace (and not attached):
-##  [1] compiler_3.6.1  magrittr_1.5    tools_3.6.1     htmltools_0.3.6
-##  [5] yaml_2.2.0      Rcpp_1.0.2      stringi_1.4.3   rmarkdown_1.14 
-##  [9] knitr_1.24      stringr_1.4.0   xfun_0.8        digest_0.6.20  
-## [13] evaluate_0.14</code></pre>
+##  [1] Rcpp_1.0.2          lattice_0.20-38     mvtnorm_1.0-11     
+##  [4] gmm_1.6-2           zoo_1.8-6           digest_0.6.20      
+##  [7] grid_3.6.1          stats4_3.6.1        magrittr_1.5       
+## [10] ellipse_0.4.1       evaluate_0.14       stringi_1.4.3      
+## [13] Matrix_1.2-17       mcmcse_1.3-2        optimx_2018-7.10   
+## [16] sandwich_2.5-1      rmarkdown_1.14      tools_3.6.1        
+## [19] stringr_1.4.0       tmvtnorm_1.4-10     numDeriv_2016.8-1.1
+## [22] xfun_0.8            yaml_2.2.0          compiler_3.6.1     
+## [25] htmltools_0.3.6     knitr_1.24</code></pre>
 <pre class="r"><code>library(SurvGPR)
 library(MASS)
 # set dimesions
