@@ -35,7 +35,7 @@ K1.full <- exp(-Kout/max(Kout))
 
 Z <- cbind(rep(1, n), matrix(rnorm(n*q), nrow=n))
 beta <- c(6.2, -0.5, -1.2)
-Sigma <- 3*K1.full
+Sigma <- 2*K1.full
 G <- mvrnorm(n = 1, mu = rep(0, n), Sigma = Sigma, tol = 1e-6)
 	
 # generate failure times 
@@ -45,10 +45,10 @@ y <- pmin(log_time, C)
 time <- exp(y)
 status <- 1*(y != C)
 ```
-Note that the $M$ candidate kernels should be organized into an array of dimension $n_{\rm train} \times n_{\rm train} \times M$. Note that even if $M = 1$, this must still be entered as an array. In addition, each of candidate the kernels should be positive definite. In the code above, the candidate kernels are stored as $\texttt{K1}$.
+Note that the $M$ candidate kernels should be organized into an array of dimension $n_{\rm train} \times n_{\rm train} \times M$. Note that even if $M = 1$, this must still be entered as an array. In addition, each of the candidate the kernels should be positive definite. In the code above, the candidate kernels are stored as $\texttt{K1}$.
 
-Next, we fit the SurvGPR model using the following. Please note that this may take a few minutes to run. 
-```{r fit_SurvGPR, include = TRUE, tidy = TRUE, cache=TRUE}
+Next, we fit the $\texttt{SurvGPR}$ model using the following. Please note that this may take a few minutes to run. 
+```{r fit_SurvGPR, include = TRUE,  cache=TRUE}
 time.train <- time[train.inds]
 status.train <- status[train.inds]
 Z.train <- Z[train.inds,]
@@ -63,12 +63,14 @@ Z.train[1:10, ]
 str(K.train)
 ```
 Finally, we fit the model using the $\texttt{SurvGPR}$ function. 
-```{r fit_SurvGPR2, include = TRUE, tidy = TRUE, cache=TRUE}
-results <- SurvGPR(time = time.train, status = status.train, Z = Z.train, K = K.train, tol = 1e-7, 
-                   max.iter.MM = 100, max.iter = 100, quiet=FALSE, max.samples = 1e5, initializer = 0)
+```{r fit_SurvGPR2, include = TRUE , cache=TRUE}
+set.seed(21)
+results <- SurvGPR(time = time.train, status = status.train, Z = Z.train, K = K.train, 
+                   tol = 1e-7, max.iter.MM = 100, max.iter = 100, quiet=FALSE, 
+                   max.samples = 1e5, initializer = 0)
 ```
 Checking the output, we have a list of parameter estimates and other information needed for subsequent prediction tasks. 
-```{r results_print, include = TRUE, tidy = TRUE, cache=TRUE}
+```{r results_print, include = TRUE , cache=TRUE}
 str(results)
 ```
 
@@ -78,17 +80,20 @@ results$sigma2
 ```
 
 
-With the fitted model, we can then predict for new subjects. Note that we can also get predicted survival probabilities at certain times (on the original scale, not log-scale) by specifying times in the \texttt{times} argument. The first two arguments should be input as shown below: $\texttt{Z} \in \mathbb{R}^{n \times p+1}$, $\texttt{K.testt}  \in \mathbb{R}^{n \times n \times M}$ where $\texttt{train.inds}$ and $\texttt{test.inds}$ are a partition of $\left\{1, \dots, n\right\}$ where $\texttt{train.inds}$ denote the rows of $\texttt{Z}$ and row/columns of $\textttt{K}$ corresponding to the training subjects; and $\texttt{test.inds}$ corresponds to the testing subjects. 
+With the fitted model, we can then predict for new subjects. Note that we can also get predicted survival probabilities at certain times (on the original scale, not log-scale) by specifying times in the $\texttt{times}$ argument. The first two arguments should be input as shown below: $\texttt{Z} \in \mathbb{R}^{n \times p+1}$, $\texttt{K.testt}  \in \mathbb{R}^{n \times n \times M}$ where $\texttt{train.inds}$ and $\texttt{test.inds}$ are a partition of $\left\{1, \dots, n\right\}$ where $\texttt{train.inds}$ denote the rows of $\texttt{Z}$ and row/columns of $\texttt{K}$ corresponding to the training subjects; and $\texttt{test.inds}$ corresponds to the testing subjects. 
 ```{r, cache=TRUE, tidy=TRUE}
 K.test <- array(K1.full, dim=c(n,n, 1))
 pred_results <- SurvGPR_Predict(results = results, barT = results$Tout , Z.full = Z, K.full = K.test, train.inds = train.inds, test.inds = test.inds, times = seq(0, max(time)/5, length=1000))
 str(pred_results)
 ```
-The output contains the predicted survival times on the log-scale, the testing indices, and the survival probabilities for all test set patients at the values given for \texttt{times}. We plot the estimated probabilites for three different subjects below. 
+The output contains the predicted survival times on the log-scale, the testing indices, and the survival probabilities for all test set patients at the values given for \texttt{times}. We plot the true survival curve (dashed) and the estimated survival curve (solid) for two subjects below (differentiated by colors). 
 ```{r survPlot4, cache=TRUE, tidy=TRUE}
-plot(x = seq(0, max(time)/5, length=1000), y = pred_results$survFunc[1,], 
-     ylab="Survival probability", xlab="Survival time", type="l", xlim = c(0,2000), ylim=c(0,1))
-lines(x = seq(0, max(time)/5, length=1000), y = 1 - pnorm(log(seq(1, max(time)/5, length=1000)), mean = c(Z[test.inds[1],]%*%beta), sd = sqrt(3.5)), lty=2)
+dim(pred_results$survFunc)
+plot(x = seq(0, max(time)/5, length=1000), y = pred_results$survFunc[4,], 
+     ylab="Survival probability", xlab="Survival time", type="l", ylim=c(0,1))
+lines(x = seq(0, max(time)/5, length=1000), y = 1 - pnorm(log(seq(1, max(time)/5, length=1000)), mean = c(Z[test.inds[4],]%*%beta), sd = sqrt(3.5)), lty=2)
+lines(x = seq(0, max(time)/5, length=1000), y = 1 - pnorm(log(seq(1, max(time)/5, length=1000)), mean = c(Z[test.inds[1],]%*%beta), sd = sqrt(3.5)), lty=2, col="red")
+lines(x = seq(0, max(time)/5, length=1000), y = pred_results$survFunc[1,], lty=1, col="red")
 ```
 
 
