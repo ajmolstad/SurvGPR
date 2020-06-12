@@ -52,8 +52,12 @@ MM_Alg <- function(Z, Y, K, max.iter){
 
 
 # --------------------------------------------
+#
 # Inner MCEM algorithm for kern.type = "K+I"
+#
 # --------------------------------------------
+
+
 SurvGPR_KI = function(time, status, Z, K, tol, max.iter, 
 					max.iter.MM, 
                     quiet, max.samples, initializer){
@@ -142,9 +146,9 @@ SurvGPR_KI = function(time, status, Z, K, tol, max.iter,
 	nsamples <- 500
 	loglik <- rep(0, max.iter)
 
-  # -------------------------------------------------------
-  # iterations 
-  # -------------------------------------------------------
+  	# -------------------------------------------------------
+  	# iterations 
+  	# -------------------------------------------------------
 	for(qq in 1:max.iter){
 		
 		# --- E step --------
@@ -306,6 +310,7 @@ SurvGPR_KI = function(time, status, Z, K, tol, max.iter,
 #  MCEM algorithm for kern.type = "multi-K"
 #
 # ---------------------------------------------
+
 SurvGPR_MK = function(time, status, Z, K, tol, 
                       max.iter, 
                       max.iter.MM, 
@@ -620,11 +625,11 @@ SurvGPR_MK = function(time, status, Z, K, tol,
 
 
 
-# ------------------------------------------
+# -------------------------------------------------
 #
 #   Prediction function for fitted model 
 #
-# ------------------------------------------
+# --------------------------------------------------
 
 SurvGPR_Predict <- function(results, barT, Z.full, K.full, train.inds, test.inds, times = NULL){
     
