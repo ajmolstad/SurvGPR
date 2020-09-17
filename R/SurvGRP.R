@@ -4,12 +4,12 @@
 #
 # ------------------------------------------------
 
-MM_Alg <- function(Z, Y, K, max.iter){
+MM_Alg <- function (Z, Y, K, max.iter) {
 	
 	# -- MM Algorithm for variance components ----
 	sigma2 <- rep(var(Y)/dim(K)[3], dim(K)[3])
 	Omega <- matrix(0, nrow=dim(K)[1], ncol=dim(K)[2])
-	for(j in 1:dim(K)[3]){
+	for (j in 1:dim(K)[3]) {
 		Omega <- Omega + sigma2[j]*K[,,j]
 	}
 	OmegaInvZ <- solve(Omega, Z)
@@ -20,28 +20,28 @@ MM_Alg <- function(Z, Y, K, max.iter){
 	log.lik.old <- log.lik.orig
 	Omegat <- Omega
 
-	while(iterating){
+	while (iterating) {
 
 		OmegaInvZ <- solve(Omegat, Z)
 		betat <- solve(crossprod(OmegaInvZ, Z),crossprod(OmegaInvZ,Y))
 		temp <- Z%*%betat
 		sigma2t <- rep(0, dim(K)[3])
 		L <- solve(Omegat, Y - temp)
-		for(j in 1:dim(K)[3]){
+		for (j in 1:dim(K)[3]) {
 			sigma2t[j] <- sigma2[j]*sqrt(tcrossprod(crossprod(L, K[,,j]), t(L))/sum(diag(solve(Omegat, K[,,j]))))
 		}
 		Omegat <- matrix(0, nrow=dim(K)[1], ncol=dim(K)[2])
-		for(j in 1:dim(K)[3]){
+		for (j in 1:dim(K)[3]) {
 			Omegat <- Omegat + sigma2t[j]*K[,,j]
 		}
 		log.lik.new <- crossprod(Y - temp, solve(Omegat, Y - temp)) + determinant(Omegat, logarithm=TRUE)$modulus[1]
 		k.iter <- k.iter + 1
-		if(k.iter > 2){
-			if(log.lik.old - log.lik.new < 1e-8*abs(log.lik.orig)){
+		if (k.iter > 2) {
+			if (log.lik.old - log.lik.new < 1e-8*abs(log.lik.orig)) {
 				iterating <- FALSE
 			}
 		}
-		if(k.iter > max.iter){
+		if (k.iter > max.iter) {
 			iterating <- FALSE
 		}
 		sigma2 <- sigma2t
@@ -58,9 +58,9 @@ MM_Alg <- function(Z, Y, K, max.iter){
 # --------------------------------------------
 
 
-SurvGPR_KI = function(time, status, Z, K, tol, max.iter, 
+SurvGPR_KI = function (time, status, Z, K, tol, max.iter, 
 					max.iter.MM, 
-                    quiet, max.samples, initializer){
+                    quiet, max.samples, initializer) {
 
 	# ----------------------------------------
 	# censored and uncensored observations 
@@ -82,7 +82,7 @@ SurvGPR_KI = function(time, status, Z, K, tol, max.iter,
 	failure.times <- unique(time.sorted[status.sorted==1])
 	temp <- rep(0, length(failure.times))
 	KM <- rep(0, length(failure.times))
-	for(j in 1:length(failure.times)){
+	for (j in 1:length(failure.times)) {
 		temp[j] <- 1 - sum(time.sorted[status.sorted == 1] == failure.times[j])/sum(time.sorted >= failure.times[j])
 		KM[j] <- prod(temp[1:j])
 	}
@@ -91,21 +91,21 @@ SurvGPR_KI = function(time, status, Z, K, tol, max.iter,
 	time.imputed <- time.sorted[status.sorted==0]
 	time.updated <- time.imputed
 
-	for(j in 1:length(time.imputed)){
+	for (j in 1:length(time.imputed)) {
 		inds <- which(time.observed > time.imputed[j])
 		intermed <- rep(0, length(inds))
-		for(k in 1:length(inds)){
-		  if(inds[k] == 1){
+		for (k in 1:length(inds)) {
+		  if (inds[k] == 1) {
 		    intermed[k] <- time.observed[inds[k]]*(1 - KM[inds[k]])
 		  } else {
 		    intermed[k] <- time.observed[inds[k]]*(KM[inds[k]-1] - KM[inds[k]])
 		  }
 		}
 
-		if(any(time.observed == time.imputed[j])){
+		if (any(time.observed == time.imputed[j])) {
 		  time.updated[j] <- sum(intermed)/KM[which(time.observed == time.imputed[j])]
 		} else {
-		  if(length(which(time.observed < time.imputed[j]))==0){
+		  if (length(which(time.observed < time.imputed[j]))==0) {
 		    time.updated[j] <- sum(intermed)
 		  } else {
 		    time.updated[j] <- sum(intermed)/KM[max(which(time.observed < time.imputed[j]))]
@@ -149,7 +149,7 @@ SurvGPR_KI = function(time, status, Z, K, tol, max.iter,
   	# -------------------------------------------------------
   	# iterations 
   	# -------------------------------------------------------
-	for(qq in 1:max.iter){
+	for (qq in 1:max.iter) {
 		
 		# --- E step --------
 		EtY = Z1%*%beta.iter + Kbeta%*%(Y0 - Z0%*%beta.iter)
@@ -166,11 +166,11 @@ SurvGPR_KI = function(time, status, Z, K, tol, max.iter,
 		O.temp <- O.iter
 		inner.count <- 1
 
-		while(update){
+		while (update) {
 
 			update.MM <- TRUE
 			iter.MM <- 1
-			if(qq > 1){
+			if (qq > 1) {
 				loglik.oldtemp <- loglik[qq-1]
 			} else {
 				loglik.oldtemp <- Inf
@@ -179,7 +179,7 @@ SurvGPR_KI = function(time, status, Z, K, tol, max.iter,
 			# --------------------------------------
 			# Run blockwise coordinate descent
 			# --------------------------------------
-			while(update.MM){         
+			while (update.MM) {         
 
 				# ----------------------------
 				# update beta 
@@ -196,7 +196,7 @@ SurvGPR_KI = function(time, status, Z, K, tol, max.iter,
 				out[,(length(Y0)+1):length(Yup)] <- Yl
 				inner <- out - tcrossprod(rep(1, nsamples), store)
 				R <- rowSums(tcrossprod(t(U), inner)^2)/nsamples
-				fn <- function(x){sum(R/(lambda*x[1] + x[2]) - log(1/(lambda*x[1] + x[2])))}
+				fn <- function (x) {sum(R/(lambda*x[1] + x[2]) - log(1/(lambda*x[1] + x[2])))}
 				out <- optimx(par=alpha2.temp, fn=fn, lower = c(0, 1e-6), upper=c(Inf, Inf), method="L-BFGS-B")
 				alpha2.temp[1] <- out$p1
 				alpha2.temp[2] <- out$p2 
@@ -210,11 +210,11 @@ SurvGPR_KI = function(time, status, Z, K, tol, max.iter,
 				out.temp  <- rowSums(tcrossprod(inner, chol(O.temp))^2)
 				loglik.temp <- - sum(out.temp) - nsamples*Omega.det
 				cat(loglik.temp, "\n") # for development
-				if(iter.MM == 1){
+				if (iter.MM == 1) {
 					loglik.orig <- loglik.temp
 				}
-				if(iter.MM > 1){
-					if(abs(loglik.temp - loglik.oldtemp)/abs(loglik.orig) < tol){
+				if (iter.MM > 1) {
+					if (abs(loglik.temp - loglik.oldtemp)/abs(loglik.orig) < tol) {
 						update.MM <- FALSE
 						loglik.new <- loglik.temp
 					} else {
@@ -225,7 +225,7 @@ SurvGPR_KI = function(time, status, Z, K, tol, max.iter,
 				loglik.oldtemp <- loglik.temp
 				iter.MM <- iter.MM + 1
 
-				if(iter.MM > max.iter.MM){
+				if (iter.MM > max.iter.MM) {
 					update.MM <- FALSE
 				}
 			}
@@ -245,11 +245,11 @@ SurvGPR_KI = function(time, status, Z, K, tol, max.iter,
       		loglik.old <- - sum(out.old) - nsamples*old.det
 			ASE <- mcse(- .5*out.temp - .5*determinant(Omega.temp[c(train.obs,train.cen), c(train.obs,train.cen)], logarithm=TRUE)$modulus[1] + .5*out.old + .5*old.det, method="tukey")$se
 			
-			if(!quiet){
+			if (!quiet) {
 				cat(qq, ": ASE =", round(ASE,3), "; sigma2 =", round(alpha2.temp, 3), "; resid =", round(.5*loglik.new/nsamples - .5*loglik.old/nsamples - 1.96*ASE, 5),"; sk =", nsamples, "\n")
 			}        
 			
-			if(c(.5*loglik.new/nsamples - .5*loglik.old/nsamples - 1.96*ASE) > 0 ){
+			if (c(.5*loglik.new/nsamples - .5*loglik.old/nsamples - 1.96*ASE) > 0 ) {
 
 				update <- FALSE
 				beta.iter <- beta.temp
@@ -270,11 +270,11 @@ SurvGPR_KI = function(time, status, Z, K, tol, max.iter,
 				cat("Adding samples for ascent:" , nsamples, " samples", "\n")
 				inner.count <-  inner.count + 1
 
-				if(inner.count > max.iter){
+				if (inner.count > max.iter) {
 					update <- FALSE
 					broken <- TRUE
 				} 
-				if(nsamples > max.samples){
+				if (nsamples > max.samples) {
 					update <- FALSE
 					broken <- TRUE
 				} 
@@ -283,11 +283,11 @@ SurvGPR_KI = function(time, status, Z, K, tol, max.iter,
 		}
 
 		nsamples <- nsamples 
-		if(nsamples > max.samples){
+		if (nsamples > max.samples) {
 			broken <- TRUE
 		}
 		
-		if(broken){
+		if (broken) {
 			break
 		}
 		
@@ -311,11 +311,11 @@ SurvGPR_KI = function(time, status, Z, K, tol, max.iter,
 #
 # ---------------------------------------------
 
-SurvGPR_MK = function(time, status, Z, K, tol, 
+SurvGPR_MK = function (time, status, Z, K, tol, 
                       max.iter, 
                       max.iter.MM, 
                       quiet, max.samples, 
-                      initializer){
+                      initializer) {
   
   # ----------------------------------------
   # divide training and testing sets
@@ -338,7 +338,7 @@ SurvGPR_MK = function(time, status, Z, K, tol,
   failure.times <- unique(time.sorted[status.sorted==1])
   temp <- rep(0, length(failure.times))
   KM <- rep(0, length(failure.times))
-  for(j in 1:length(failure.times)){
+  for (j in 1:length(failure.times)) {
     temp[j] <- 1 - sum(time.sorted[status.sorted == 1] == failure.times[j])/sum(time.sorted >= failure.times[j])
     KM[j] <- prod(temp[1:j])
   }
@@ -347,20 +347,20 @@ SurvGPR_MK = function(time, status, Z, K, tol,
   time.imputed <- time.sorted[status.sorted==0]
   time.updated <- time.imputed
   
-  for(j in 1:length(time.imputed)){
+  for (j in 1:length(time.imputed)) {
     inds <- which(time.observed > time.imputed[j])
     intermed <- rep(0, length(inds))
-    for(k in 1:length(inds)){
-      if(inds[k] == 1){
+    for (k in 1:length(inds)) {
+      if (inds[k] == 1) {
         intermed[k] <- time.observed[inds[k]]*(1 - KM[inds[k]])
       } else {
         intermed[k] <- time.observed[inds[k]]*(KM[inds[k]-1] - KM[inds[k]])
       }
     }
-    if(any(time.observed == time.imputed[j])){
+    if (any(time.observed == time.imputed[j])) {
       time.updated[j] <- sum(intermed)/KM[which(time.observed == time.imputed[j])]
     } else {
-      if(length(which(time.observed < time.imputed[j]))==0){
+      if (length(which(time.observed < time.imputed[j]))==0) {
         time.updated[j] <- sum(intermed)
       } else {
         time.updated[j] <- sum(intermed)/KM[max(which(time.observed < time.imputed[j]))]
@@ -386,12 +386,12 @@ SurvGPR_MK = function(time, status, Z, K, tol,
   Y.train <- Y.tot[c(train.obs, train.cen)]
 
   # -- error variance equal to unconditional variance, coefs nonzero 
-  if(initializer == 0){
+  if (initializer == 0) {
     
     alpha2.temp <- rep(var(log(Y.train))/M, M)
     Omega.temp <- matrix(0, nrow = dim(K)[1], ncol = dim(K)[1])
     K.chols <- array(0, dim=c(length(train.inds), length(train.inds), M))
-    for(k in 1:M){
+    for (k in 1:M) {
       Omega.temp <- Omega.temp + alpha2.temp[k]*K[,,k]
       K.chols[,,k] <- chol(K[c(train.obs, train.cen), c(train.obs, train.cen), k])
     }
@@ -403,14 +403,14 @@ SurvGPR_MK = function(time, status, Z, K, tol,
     
   } 
   
-  if(initializer == 1){
+  if (initializer == 1) {
     
     out <- MM_Alg(Z.train, log(Y.train), K[c(train.obs, train.cen),c(train.obs, train.cen), ], max.iter = 1e3)
     Omega.temp <- matrix(0, nrow = dim(K)[1], ncol = dim(K)[1])
     beta.iter <- out$beta
     alpha2.temp <- out$sigma2
     K.chols <- array(0, dim=c(length(train.inds), length(train.inds), M))
-    for(k in 1:M){
+    for (k in 1:M) {
       Omega.temp <- Omega.temp + alpha2.temp[k]*K[,,k]
       K.chols[,,k] <- chol(K[c(train.obs, train.cen), c(train.obs, train.cen), k])
     }
@@ -436,7 +436,7 @@ SurvGPR_MK = function(time, status, Z, K, tol,
   # iterations 
   # ---------------------------------------------------
   
-  for(qq in 1:max.iter){
+  for (qq in 1:max.iter) {
     
     # ---------------------------------------------------
     # E step 
@@ -457,11 +457,11 @@ SurvGPR_MK = function(time, status, Z, K, tol,
     O.temp <- O.iter
     inner.count <- 1
  
-    while(update){
+    while (update) {
       
       update.MM <- TRUE
       iter.MM <- 1
-      if(qq > 1){
+      if (qq > 1) {
         loglik.oldtemp <- loglik[qq-1]
       } else {
         loglik.oldtemp <- Inf
@@ -470,7 +470,7 @@ SurvGPR_MK = function(time, status, Z, K, tol,
       out[, 1:length(Y0)] <- matrix(rep(Y0,nsamples), byrow=TRUE, nrow=nsamples)
       out[,(length(Y0)+1):length(Yup)] <- Yl
       
-      while(update.MM){         
+      while (update.MM) {         
         
         # -- solve beta -------
         inner <- crossprod(Z.train, O.temp)
@@ -482,8 +482,8 @@ SurvGPR_MK = function(time, status, Z, K, tol,
         alpha2.up <- rep(0, M)
         inner.temp <- tcrossprod(inner, O.temp)
         Omega.temp <- matrix(0, nrow=dim(Omega.iter)[1], ncol=dim(Omega.iter)[1])
-        for(k in 1:M){
-          if(alpha2.temp[k] > 1e-8){
+        for (k in 1:M) {
+          if (alpha2.temp[k] > 1e-8) {
             l.mat <- tcrossprod(inner.temp, K.chols[,,k])
             alpha2.up[k] <- alpha2.temp[k]*sqrt((nsamples^(-1)*sum(l.mat^2))/sum(O.temp*K[c(train.obs, train.cen),c(train.obs, train.cen),k]))
             Omega.temp <- Omega.temp + alpha2.up[k]*K[,,k]
@@ -496,13 +496,13 @@ SurvGPR_MK = function(time, status, Z, K, tol,
         out.temp  <- rowSums(tcrossprod(inner, chol(O.temp))^2)
         loglik.temp <- - sum(out.temp) - nsamples*Omega.det
 
-        #if(M > 2){
+        #if (M > 2) {
          # --- extrapolation attempt ---
-          if(iter.MM > 1){
+          if (iter.MM > 1) {
 
             alpha2.extrapolation <- alpha2.temp + (1/sqrt(iter.MM-1))*(alpha2.temp - alpha2.temp.old)
             Omega.extrapolation <- matrix(0, nrow=dim(Omega.iter)[1], ncol=dim(Omega.iter)[1])
-            for(k in 1:M){
+            for (k in 1:M) {
               Omega.extrapolation <- Omega.extrapolation + alpha2.extrapolation[k]*K[,,k]
             }
             O.extrapolation <- chol2inv(chol(Omega.extrapolation[c(train.obs,train.cen), c(train.obs,train.cen)]))
@@ -511,7 +511,7 @@ SurvGPR_MK = function(time, status, Z, K, tol,
             loglik.extrapolation <- - sum(out.extrapolation) - nsamples*Omega.det.extrapolation
             
             # ----- cat("Extrapolation step: extrap loglik = ",loglik.extrapolation, "prev loglik = ", loglik.temp, "\n")
-            if(loglik.extrapolation > loglik.temp){
+            if (loglik.extrapolation > loglik.temp) {
               
               alpha2.temp <- alpha2.extrapolation
               Omega.temp <- Omega.extrapolation
@@ -525,12 +525,12 @@ SurvGPR_MK = function(time, status, Z, K, tol,
          #  }
         # cat(loglik.temp, "\n")
 
-        if(iter.MM == 1){
+        if (iter.MM == 1) {
           loglik.orig <- loglik.temp
         }
 
-        if(iter.MM > 1){
-          if(abs(loglik.temp - loglik.oldtemp)/abs(loglik.orig) < tol){
+        if (iter.MM > 1) {
+          if (abs(loglik.temp - loglik.oldtemp)/abs(loglik.orig) < tol) {
             update.MM <- FALSE
             loglik.new <- loglik.temp
           } 
@@ -540,7 +540,7 @@ SurvGPR_MK = function(time, status, Z, K, tol,
         iter.MM <- iter.MM + 1
         alpha2.temp.old <- alpha2.temp
         
-        if(iter.MM > max.iter.MM){
+        if (iter.MM > max.iter.MM) {
           update.MM <- FALSE
         }
       }
@@ -557,11 +557,11 @@ SurvGPR_MK = function(time, status, Z, K, tol,
       nsamples.iterates[qq] <- nsamples
 
       ASE <- mcse(- .5*out.temp - .5*Omega.det + .5*out.old + .5*old.det, method="tukey")$se
-      if(!quiet){
+      if (!quiet) {
         cat(qq,": ASE =", round(ASE,3), "; sigma2 =", round(alpha2.temp[1], 3), "; resid =", round(.5*loglik.new/nsamples - .5*loglik.old/nsamples - 2.58*ASE, 5),"; sk =", nsamples, "\n")
       }        
       
-      if(.5*loglik.new/nsamples - .5*loglik.old/nsamples - 2.58*ASE > 1e-4 & nsamples.inner.count <= 10){
+      if (.5*loglik.new/nsamples - .5*loglik.old/nsamples - 2.58*ASE > 1e-4 & nsamples.inner.count <= 10) {
         
         update <- FALSE
         beta.iter.old <- beta.iter
@@ -588,12 +588,12 @@ SurvGPR_MK = function(time, status, Z, K, tol,
         nsamples.inner.count <- 1
         
         
-        if(inner.count > max.iter){
+        if (inner.count > max.iter) {
           update <- FALSE
           broken <- TRUE
         } 
         
-        if(nsamples > max.samples){
+        if (nsamples > max.samples) {
           update <- FALSE
           broken <- TRUE
         } 
@@ -603,11 +603,11 @@ SurvGPR_MK = function(time, status, Z, K, tol,
     
     nsamples <- nsamples
 
-    if(nsamples > max.samples){
+    if (nsamples > max.samples) {
         broken <- TRUE
     }
 
-    if(broken){
+    if (broken) {
       break
     }
     
@@ -631,13 +631,13 @@ SurvGPR_MK = function(time, status, Z, K, tol,
 #
 # --------------------------------------------------
 
-SurvGPR_Predict <- function(results, barT, Z.full, K.full, train.inds, test.inds, times = NULL){
+SurvGPR_Predict <- function (results, barT, Z.full, K.full, train.inds, test.inds, times = NULL) {
     
     # ------------------------------------------
     # Create covariance
     # ------------------------------------------
     K.temp <- array(0, dim=c(dim(K.full)[1], dim(K.full)[2], dim(K.full)[3]+1))
-    for(j in 1:dim(K.full)[3]){
+    for (j in 1:dim(K.full)[3]) {
       K.temp[,,j] <- K.full[,,j]
     }
     K.temp[,,dim(K.full)[3]+1] <- diag(1, dim(K.full)[1])
@@ -646,12 +646,12 @@ SurvGPR_Predict <- function(results, barT, Z.full, K.full, train.inds, test.inds
     # --------------------------------------------
     # Check dimensionality
     # --------------------------------------------
-    if(dim(K.full)[3] != length(results$sigma2)){
+    if (dim(K.full)[3] != length(results$sigma2)) {
       stop("Length of results$sigma2 != dim(K.full)[3]")
     }
   
     K.mat <- matrix(0, nrow=dim(K.full)[1], ncol=dim(K.full)[2])
-    for(j in 1:length(results$sigma2)){
+    for (j in 1:length(results$sigma2)) {
       K.mat <- K.mat + results$sigma2[j]*K.full[,,j]
     }
     
@@ -671,7 +671,7 @@ SurvGPR_Predict <- function(results, barT, Z.full, K.full, train.inds, test.inds
     # -------------------------------------------------------
     # If time!=NULL, compute individual survival curves
     # -------------------------------------------------------
-    if(!is.null(times)){
+    if (!is.null(times)) {
    
       # -------------------------------------------------
       # get conditional variance
@@ -679,8 +679,8 @@ SurvGPR_Predict <- function(results, barT, Z.full, K.full, train.inds, test.inds
       VtY <- K22 - t(K12)%*%solve(K11, K12)
       
       out <- matrix(0, nrow=length(test.inds), ncol=length(times))
-      for(j in 1:length(test.inds)){
-        for(k in 1:length(times)){
+      for (j in 1:length(test.inds)) {
+        for (k in 1:length(times)) {
           out[j,k] <- 1 - pnorm(log(times)[k], mean = EtY[j], sd = sqrt(VtY[j,j]))
         }
       }
@@ -701,21 +701,21 @@ SurvGPR_Predict <- function(results, barT, Z.full, K.full, train.inds, test.inds
 # 
 # ------------------------------------------------
 
-SurvGPR = function(time, status, Z, K, tol = 1e-7, 
+SurvGPR = function (time, status, Z, K, tol = 1e-7, 
                     max.iter = 100, max.iter.MM = 100, 
                     quiet = FALSE, max.samples = 1e5,
-                    kern.type = c("multi-K"), initializer = 0){
+                    kern.type = c("multi-K"), initializer = 0) {
 
-  if(kern.type == "multi-K"){
+  if (kern.type == "multi-K") {
       # - store
       K.input <- array(0, dim=c(dim(K)[1], dim(K)[2], dim(K)[3]+1))
-      for(j in 1:dim(K)[3]){
+      for (j in 1:dim(K)[3]) {
         K.input[,,j] <- K[,,j]
       }
       K.input[,,dim(K)[3]+1] <- diag(1, dim(K[,,1])[1])
       K <- K.input
       
-      if(!(initializer %in% 0:3)){
+      if (!(initializer %in% 0:3)) {
         stop("Initializer needs to one of {0,1,2,3}")
       }
       
@@ -724,7 +724,7 @@ SurvGPR = function(time, status, Z, K, tol = 1e-7,
                             quiet=quiet, max.samples = max.samples, initializer = initializer)
   }
 
-  if(kern.type=="K+I"){
+  if (kern.type=="K+I") {
       K.input <- array(0, dim=c(dim(K)[1], dim(K)[2], 2))
       K.input[,,1] <- K[,,1]
       K.input[,,2] <- diag(1, dim(K[,,1])[2])

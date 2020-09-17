@@ -30,12 +30,12 @@ SigmaX <- matrix(.5, nrow=p, ncol=p)
 diag(SigmaX) <- 1
 X <- mvrnorm(n = n, mu = rep(0, p), Sigma = SigmaX, tol = 1e-6)
 Kout <- as.matrix(dist(X, method="euclidean"))
-K1 <- exp(-Kout/max(Kout[train.inds,train.inds]))
+K1 <- exp(-Kout)
 K1.full <- exp(-Kout/max(Kout))
 
 Z <- cbind(rep(1, n), matrix(rnorm(n*q), nrow=n))
 beta <- c(6.2, -0.5, -1.2)
-Sigma <- 2*K1.full
+Sigma <- 2.5*K1.full
 G <- mvrnorm(n = 1, mu = rep(0, n), Sigma = Sigma, tol = 1e-6)
 	
 # generate failure times 
@@ -64,7 +64,7 @@ str(K.train)
 ```
 Finally, we fit the model using the $\texttt{SurvGPR}$ function. 
 ```{r fit_SurvGPR2, include = TRUE , cache=TRUE}
-set.seed(21)
+set.seed(20)
 results <- SurvGPR(time = time.train, status = status.train, Z = Z.train, K = K.train, 
                    tol = 1e-7, max.iter.MM = 100, max.iter = 100, quiet=FALSE, 
                    max.samples = 1e5, initializer = 0)
